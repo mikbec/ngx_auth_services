@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% if errors %}
+  <div class="alert alert-danger" role="alert">
+    <strong>{{ _(Errors:) }}</strong>
+    <ul class="list-unstyled">
+        {% for err in errors %}
+          <li>{{err}}</li>
+        {% endfor %}
+    </ul>
+    {% if error_reason %}
+        <span>{{error_reason}}</span>
+    {% endif %}
+  </div>
+{% endif %}
+
+{% if not_auth_warn %}
+  <div class="alert alert-danger" role="alert">{{ _(Not authenticated) }}</div>
+{% endif %}
+
+{% if success_slo %}
+  <div class="alert alert-success" role="alert">{{ _(Successfully logged out) }}</div>
+{% endif %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}" role="alert">{{ message }}</div>
+    {% endfor %}
+{% endif %}
+{% endwith %}
+
+{% if paint_logout %}
+  {% if attributes %}
+    <table class="table table-striped">
+      <thead>
+        <th>{{ _(Name) }}</th><th>{{ _(Values) }}</th>
+      </thead>
+      <tbody>
+        {% for attr in attributes %}
+          <tr><td>{{ attr.0 }}</td>
+          <td><ul class="list-unstyled">
+            {% for val in attr.1 %}
+              <li>{{ val }}</li>
+            {% endfor %}
+          </ul></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="alert alert-danger" role="alert">{{ _(You don't have any attributes) }}</div>
+  {% endif %}
+  <a href="{{ url_for('auth_saml.index_slo') }}" class="btn btn-danger">{{ _(Logout) }}</a>
+{% else %}
+  <a href="{{ url_for('auth_saml.index_sso') }}" class="btn btn-primary">{{ _(Login) }}</a>
+  <a href="{{ url_for('auth_saml.index_sso2') }}" class="btn btn-info">{{ _(Login and access again to this page) }}</a>
+{% endif %}
+
+{% endblock %}
