@@ -5,13 +5,15 @@ from flask import Flask
 #from flask_sqlalchemy import SQLAlchemy
 #from flask_migrate import Migrate
 from flask_babel import Babel
-#from flask_babel import lazy_gettext as _l
+from flask_babel import lazy_gettext as _l
+from flask_bootstrap import Bootstrap
 from app import config
 
 
 #db = SQLAlchemy()
 #migrate = Migrate()
 babel = Babel()
+bootstrap = Bootstrap()
 
 def create_app(config_name):
     # get application config
@@ -29,6 +31,7 @@ def create_app(config_name):
     #db.init_app(app)
     #migrate.init_app(app, db)
     babel.init_app(app)
+    bootstrap.init_app(app)
 
     from app.auth_saml import bp as auth_saml_bp
     url_prefix = app.config['URL_MASTER_CONTEXT'] + 'auth_saml'
@@ -50,7 +53,7 @@ def create_app(config_name):
         app.logger.addHandler(file_handler)
 
         app.logger.setLevel(logging.INFO)
-        app.logger.info('Application startup')
+        app.logger.info(_l('Application startup'))
 
     return app
 

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
+<meta charset="utf-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+<title>{% if title %}{{ title }}{% else %}An Auth APP with use of Python SAML Toolkit provided by OneLogin.{% endif %}</title>
+</head>
+<body>
+<h1>{% if title %}{{ title }}{% else %}An Authentication Service powered by Python SAML Toolkit.{% endif %}</h1>
+{% if paint_logout %}
+{% if attributes %}
+<p>{{ _("You have the following attributes:") }}</p>
+<table>
+<thead>
+<th>{{ _("Name") }}</th><th>{{ _("Values") }}</th>
+</thead>
+<tbody>
+{% for attr in attributes %}
+{% for val in attr.1 %}
+<tr>
+  <td>{{ attr.0 }}</td>
+  <td>{{ val }}</td>
+</tr>
+{% endfor %}
+{% endfor %}
+</tbody>
+</table>
+{% else %}
+<p>{{ _("You don't have any attributes.") }}</p>
+{% endif %}
+<a href="{{ url_for('auth_saml.index_slo') }}?url={{ url_for('auth_saml.auth_check') }}">{{ _("Logout") }}</a>
+{% else %}
+<a href="{{ url_for('auth_saml.index_sso') }}?url={{ url_for('auth_saml.auth_check') }}">{{ _("Login and access again to this page") }}</a>
+{% endif %}
+</body>
+</html>

@@ -1,6 +1,6 @@
 import os
-_saml_base_cfg_dir = os.path.abspath(os.path.dirname(__file__))
-#_saml_base_cfg_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)), 'saml')
+#_saml_base_cfg_dir = os.path.abspath(os.path.dirname(__file__))
+_saml_base_cfg_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'saml')
 
 class BaseConfig(object):
     '''
@@ -16,7 +16,7 @@ class BaseConfig(object):
     # URL_MASTER_CONTEXT must be empty or must begin and end with "/".
     URL_MASTER_CONTEXT = \
             os.environ.get('NGX_SAML_AUTH_URL_MASTER_CONTEXT') or \
-            '/auth_external/'
+            '/auth_services/'
 
     @staticmethod
     def init_app(app):

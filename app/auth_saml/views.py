@@ -1,4 +1,4 @@
-from flask import request, render_template, redirect, session,
+from flask import request, render_template, redirect, session, \
                   make_response, url_for, flash, current_app
 from urllib.parse import urlparse
 from flask_babel import _
@@ -64,9 +64,7 @@ def index():
                 paint_logout=paint_logout
             )
 
-@auth_saml_bp.route('/sso', methods=['GET', 'POST'])
-@nocache
-def index_sso():
+def do_index_sso(url_for_arg):
     req = prepare_flask_request(request)
     auth = init_saml_auth(req)
     errors = []
@@ -81,7 +79,7 @@ def index_sso():
     current_app.logger.info('Info(/sso): Got req : '+pprint.pformat(req))
     current_app.logger.info('Info(/sso): Got args: '+pprint.pformat(request.args))
 
-    return_to = url_for('.index')
+    return_to = url_for(url_for_arg)
     if 'url' in request.args:
         return_to = request.args['url']
     #return redirect(return_to)
@@ -91,26 +89,15 @@ def index_sso():
     current_app.logger.info('Info(/sso)->out: redirect(sso_built_url): ' + sso_built_url)
     return redirect(sso_built_url)
 
+@auth_saml_bp.route('/sso', methods=['GET', 'POST'])
+@nocache
+def index_sso():
+    return(do_index_sso('.index'))
+
 @auth_saml_bp.route('/sso2', methods=['GET', 'POST'])
 @nocache
 def index_sso2():
-    req = prepare_flask_request(request)
-    auth = init_saml_auth(req)
-    errors = []
-    error_reason = None
-    not_auth_warn = False
-    success_slo = False
-    attributes = False
-    paint_logout = False
-
-    #hdrs = dict(request.headers)
-    #current_app.logger.info('Info(/sso2): Got header: '+pprint.pformat(hdrs))
-    #current_app.logger.info('Info(/sso2): Got req : '+pprint.pformat(req))
-    #current_app.logger.info('Info(/sso2): Got args: '+pprint.pformat(request.args))
-
-    return_to = '%sattrs/' % request.host_url
-    current_app.logger.info('Info(/sso2)->out: redirect(auth.login): ' + return_to)
-    return redirect(auth.login(return_to))
+    return(do_index_sso('.attrs'))
 
 @auth_saml_bp.route('/slo', methods=['GET', 'POST'])
 @nocache
@@ -299,27 +286,44 @@ def auth_check():
     auth = init_saml_auth(req)
     paint_logout = False
     attributes = False
+    out_code = 200
 
     hdrs = dict(request.headers)
     current_app.logger.info('Info(/auth_check): Got header: '+pprint.pformat(hdrs))
     current_app.logger.info('Info(/auth_check): Got req : '+pprint.pformat(req))
     current_app.logger.info('Info(/auth_check): Got args: '+pprint.pformat(request.args))
 
-    if not auth.is_authenticated():
-        response = make_response('User authentication needed.', 401)
-        current_app.logger.info('Info(/auth_check)->out: out via 401')
-        return response
+    #if not auth.is_authenticated():
+    #    response = make_response('User authentication needed.', 401)
+    #    current_app.logger.info('Info(/auth_check)->out: out via 401')
+    #    return response
 
     if 'samlUserdata' in session:
         paint_logout = True
         if len(session['samlUserdata']) > 0:
             attributes = session['samlUserdata'].items()
+        out_code = 200
+    else:
+        # not authenticated
+        out_code = 401
+
     response = make_response(
                  render_template(
-                     'auth_saml/attrs.html',
+                     'auth_saml/auth_check.html',
                      paint_logout=paint_logout,
                      attributes=attributes
-                 ), 200)
-    current_app.logger.info('Info(/auth_check)->out: out via 200')
+                 ), out_code)
+
+    if attributes:
+        #current_app.logger.info('Info(/auth_check): Got '+str(len(attributes))+' attributes: '+pprint.pformat(attributes))
+        for key, value in attributes:
+            current_app.logger.info('Info(/auth_check): Got attributes['+key+']: '+pprint.pformat(value))
+            response.headers['X-ATTR-'+key] = value[0]
+            if len(value) > 1:
+                for i in range(len(value)):
+                    response.headers['X-ATTR-'+key+'-'+str(i)] = value[i]
+
+
+    current_app.logger.info('Info(/auth_check)->out: out via '+str(out_code))
     return response
 
