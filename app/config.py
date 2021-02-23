@@ -81,6 +81,6 @@ def create_config_obj(config_name):
     elif config_name == 'test':
         return TestConfig()
     else:
-        print("warning: config_name \"" + config_name + "\" not known ... using default")
-        return DevelopmentConfig()
+        print("warning: config_name \"" + config_name + "\" not known ... using \"production\"")
+        return ProductionConfig()
 
