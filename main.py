@@ -3,7 +3,7 @@ from app import create_app
 #from app import db
 from app.cli import register_cli
 
-app = create_app(os.getenv('FLASK_ENV') or 'default')
+app = create_app(os.getenv('FLASK_ENV') or 'default', __file__)
 
 # register our cli commands
 register_cli(app)

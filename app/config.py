@@ -1,6 +1,6 @@
 import os
 #_saml_base_cfg_dir = os.path.abspath(os.path.dirname(__file__))
-_saml_base_cfg_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'saml')
+_saml_base_cfg_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)), 'saml')
 
 class BaseConfig(object):
     '''
@@ -8,7 +8,9 @@ class BaseConfig(object):
 
     You should overwrite settings in sub classes.
     '''
-    SECRET_KEY = 'The python3-saml toolkit secret key you have to change!'
+    CONFIG_NAME = 'BaseConfig'
+
+    SECRET_KEY = '!!! The python3-saml toolkit secret key you have to change! !!!'
     SAML_PATH  = \
             os.environ.get('NGX_SAML_AUTH_SAML_PATH') or \
             _saml_base_cfg_dir
@@ -18,46 +20,55 @@ class BaseConfig(object):
             os.environ.get('NGX_SAML_AUTH_URL_MASTER_CONTEXT') or \
             '/auth_services/'
 
-    @staticmethod
-    def init_app(app):
-        pass
-  
+    def update_config_obj(self, app_main_path):
+        # set SECRET_KEY
+        if 'NGX_SAML_AUTH_SECRET_KEY' in os.environ:
+            self.SECRET_KEY = os.environ.get('NGX_SAML_AUTH_SECRET_KEY')
+        elif app_main_path and os.path.isfile(os.path.join(app_main_path, 'secret-key.txt')):
+            self.SECRET_KEY = open(os.path.join(app_main_path, 'secret-key.txt')).read()
+        elif os.path.isfile(os.path.join(_saml_base_cfg_dir, 'secret-key.txt')):
+            self.SECRET_KEY = open(os.path.join(_saml_base_cfg_dir, 'secret-key.txt')).read()
+        else:
+            pass
+
+        # set SAML_PATH
+        if 'NGX_SAML_AUTH_SAML_PATH' in os.environ:
+            self.SAML_PATH = os.environ.get('NGX_SAML_AUTH_SAML_PATH')
+        elif app_main_path and os.path.exists(os.path.join(app_main_path, 'instance', 'saml')):
+            self.SAML_PATH = os.path.join(app_main_path, 'instance', 'saml')
+        elif app_main_path and os.path.exists(os.path.join(app_main_path, 'saml')):
+            self.SAML_PATH = os.path.join(app_main_path, 'saml')
 
 class DevelopmentConfig(BaseConfig):
     '''
     Configuration for Development
     '''
+    CONFIG_NAME = 'development'
+
     TESTING = False
     DEBUG = True
     DEBUG_TB_INTERCEPT_REDIRECTS = False
+
 
 class ProductionConfig(BaseConfig):
     '''
     Configuration for Production
     '''
+    CONFIG_NAME = 'production'
+
     TESTING = False
     DEBUG = False
-    SECRET_KEY = 'init on instantiate'
-
-    def init_app(app):
-        self.SECRET_KEY = \
-            os.environ.get('NGX_SAML_AUTH_SECRET_KEY') or \
-            open(os.path.join(_saml_base_cfg_dir, 'secret-key.txt')).read()
 
 class TestConfig(BaseConfig):
     '''
     Configuration for testing
     '''
+    CONFIG_NAME = 'test'
+
     TESTING = True
     DEBUG = False
-    SECRET_KEY = 'init on instantiate'
 
-    def init_app(app):
-        self.SECRET_KEY = \
-            os.environ.get('NGX_SAML_AUTH_SECRET_KEY') or \
-            open(os.path.join(_saml_base_cfg_dir, 'secret-test-key.txt')).read()
-
-def get_config(config_name):
+def create_config_obj(config_name):
     '''
     return a valid configuration 
     or a default configuration
@@ -70,5 +81,6 @@ def get_config(config_name):
     elif config_name == 'test':
         return TestConfig()
     else:
+        print("warning: config_name \"" + config_name + "\" not known ... using default")
         return DevelopmentConfig()
 

@@ -15,9 +15,15 @@ from app import config
 babel = Babel()
 bootstrap = Bootstrap()
 
-def create_app(config_name):
+def create_app(config_name, app_main_file=None):
     # get application config
-    config_obj = config.get_config(config_name)
+    if app_main_file == None:
+        app_main_path = os.path.dirname(os.path.abspath(__file__))
+    else:
+        app_main_path = os.path.dirname(os.path.abspath(app_main_file))
+    print("app_main_path is: " + app_main_path)
+    config_obj = config.create_config_obj(config_name)
+    config_obj.update_config_obj(app_main_path)
 
     # now create our app object
     static_url_path = config_obj.URL_MASTER_CONTEXT + 'static'
@@ -26,7 +32,6 @@ def create_app(config_name):
                 static_url_path = static_url_path
                )
     app.config.from_object(config_obj)
-    config_obj.init_app(app)
 
     #db.init_app(app)
     #migrate.init_app(app, db)
