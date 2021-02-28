@@ -6,6 +6,9 @@ TODOs
 * Do configuration of `settings.json` and `advanced_settings.json` via config file.
   Or put these files with its `saml/` path into instance path.
 * Print out settings in log file on application start.
+* Implement decision for `lowercase_urlencoding` in `prepare_flask_request()`
+  in file views.py because Defaults to false. But ADFS users should set this to
+  true.
 
 DONE
 ----

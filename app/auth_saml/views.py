@@ -13,7 +13,10 @@ from . import bp as auth_saml_bp
 import pprint
 
 def init_saml_auth(req):
-    auth = OneLogin_Saml2_Auth(req, custom_base_path=current_app.config['SAML_PATH'])
+    if 'AUTH_SAML_SETTINGS_DICT' in current_app.config:
+        auth = OneLogin_Saml2_Auth(req, custom_base_path=current_app.config['SAML_PATH'], old_settings=current_app.config['AUTH_SAML_SETTINGS_DICT'])
+    else:
+        auth = OneLogin_Saml2_Auth(req, custom_base_path=current_app.config['SAML_PATH'])
     return auth
 
 
