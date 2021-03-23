@@ -76,11 +76,11 @@ class AuthSAMLConfig:
         auth_saml_settings = {}
         if not config_path:
             return False
-    
+
         config_filename = os.path.join(config_path, _auth_saml_default_cfg_filename)
         if not os.path.exists(config_filename):
             return False
-    
+
         with open(config_filename, 'r') as stream:
             try:
                 auth_saml_settings = yaml.safe_load(stream)
@@ -100,7 +100,7 @@ class AuthSAMLConfig:
         self.AUTH_SAML_SP_X509CERT_FILE = auth_saml_settings.get('AUTH_SAML_SP_X509CERT_FILE', None)
         self.AUTH_SAML_SP_PRIVATEKEY_FILE = auth_saml_settings.get('AUTH_SAML_SP_PRIVATEKEY_FILE', None)
         self.AUTH_SAML_SP_NEW_X509CERT_FILE = auth_saml_settings.get('AUTH_SAML_SP_NEW_X509CERT_FILE', None)
-    
+
         # enhance "idp" stuff if needed
         self.AUTH_SAML_IDP_METADATA_URL = auth_saml_settings.get('AUTH_SAML_SP_X509CERT_FILE', None)
         self.AUTH_SAML_IDP_VALIDATE_CERT = set_string_to_boolean(auth_saml_settings.get('AUTH_SAML_IDP_VALIDATE_CERT', ""))
@@ -135,7 +135,7 @@ class AuthSAMLConfig:
                 app.logger.warning(_('Validation of SAML settings from config file "{}" failed with exception.'.format(config_filename)))
                 app.logger.warning(_('Exception was: {}'.format(str(exc))))
             return False
-    
+
         self.AUTH_SAML_SETTINGS_DICT = auth_saml_settings['AUTH_SAML_SETTINGS']
         return False
 
@@ -157,7 +157,7 @@ def set_string_to_boolean(str_val=None):
 
 def create_config_obj(app=None):
     '''
-    return a valid configuration 
+    return a valid configuration
     or a default configuration
     '''
     config_obj = AuthSAMLConfig()
