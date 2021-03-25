@@ -11,7 +11,7 @@ from . import bp as auth_saml_bp
 from .config import set_sp_metadata_urls
 
 # for current_app.logger
-import pprint
+#import pprint
 
 def init_saml_auth(req):
     if 'AUTH_SAML_SETTINGS_DICT' in current_app.config:
@@ -59,7 +59,7 @@ def index():
         if len(session['samlUserdata']) > 0:
             attributes = session['samlUserdata'].items()
 
-    current_app.logger.info('Info(/)->out: render_template(index.html)')
+    #current_app.logger.info('Info(/)->out: render_template(index.html)')
     return render_template(
                 'auth_saml/index.html',
                 errors=errors,
@@ -88,11 +88,15 @@ def do_index_sso(url_for_arg):
     return_to = url_for(url_for_arg)
     if 'url' in request.args:
         return_to = request.args['url']
+        #current_app.logger.info('Info(/sso): Found arg url='+return_to)
+    elif 'return_to' in request.args:
+        return_to = request.args['return_to']
+        #current_app.logger.info('Info(/sso): Found arg return_to='+return_to)
     #return redirect(return_to)
     # If AuthNRequest ID need to be stored in order to later validate it, do instead
     sso_built_url = auth.login(return_to)
     session['AuthNRequestID'] = auth.get_last_request_id()
-    current_app.logger.info('Info(/sso)->out: redirect(sso_built_url): ' + sso_built_url)
+    #current_app.logger.info('Info(/sso)->out: redirect(sso_built_url): ' + sso_built_url)
     return redirect(sso_built_url)
 
 @auth_saml_bp.route('/sso', methods=['GET', 'POST'])
@@ -134,8 +138,17 @@ def index_slo():
     if 'samlNameIdSPNameQualifier' in session:
         name_id_spnq = session['samlNameIdSPNameQualifier']
 
-    current_app.logger.info('Info(/slo)->out: redirect(auth.logout)')
-    return redirect(auth.logout(name_id=name_id,
+    return_to=None
+    if 'url' in request.args:
+        return_to = request.args['url']
+        #current_app.logger.info('Info(/slo): Found arg url='+return_to)
+    elif 'return_to' in request.args:
+        return_to = request.args['return_to']
+        #current_app.logger.info('Info(/slo): Found arg return_to='+return_to)
+
+    #current_app.logger.info('Info(/slo)->out: redirect(auth.logout)')
+    return redirect(auth.logout(return_to=return_to,
+                       name_id=name_id,
                        session_index=session_index,
                        nq=name_id_nq,
                        name_id_format=name_id_format,
@@ -186,7 +199,7 @@ def index_acs():
         if len(session['samlUserdata']) > 0:
             attributes = session['samlUserdata'].items()
 
-    current_app.logger.info('Info(/acs)->out: render_template(auth_saml/index.html)')
+    #current_app.logger.info('Info(/acs)->out: render_template(auth_saml/index.html)')
     return render_template(
                 'auth_saml/index.html',
                 errors=errors,
@@ -212,17 +225,29 @@ def index_sls():
     #hdrs = dict(request.headers)
     #current_app.logger.info('Info(/sls): Got header: '+pprint.pformat(hdrs))
     #current_app.logger.info('Info(/sls): Got req : '+pprint.pformat(req))
-    #current_app.logger.info('Info(/sls): /sls Got args: '+pprint.pformat(request.args))
+    #current_app.logger.info('Info(/sls): Got args: '+pprint.pformat(request.args))
 
     request_id = None
     if 'LogoutRequestID' in session:
         request_id = session['LogoutRequestID']
     dscb = lambda: session.clear()
     url = auth.process_slo(request_id=request_id, delete_session_cb=dscb)
+    # BUG(?): There seems to be a problem with auth.process_slo(). It does not
+    # give back the url in RelayState.
     errors = auth.get_errors()
+    #current_app.logger.info('Info(/sls) url='+str(url)+' errors='+str(len(errors)))
     if len(errors) == 0:
+        if url is None:
+            # begin: try to go around the BUG
+            get_data = 'get_data' in req and req['get_data']
+            if get_data and 'RelayState' in get_data:
+                url1 = get_data['RelayState']
+                url2 = current_app.config.get('AUTH_SAML_SP_SLO_URL', "")
+                if url1.lower() != url2.lower():
+                    url = get_data['RelayState']
+            # end: try to go around the BUG
         if url is not None:
-            current_app.logger.info('Info(/sls)->out: sls out via redirect url: ' + url)
+            #current_app.logger.info('Info(/sls)->out: sls out via redirect url: ' + url)
             return redirect(url)
         else:
             flash('User successfully logged out.', 'info')
@@ -236,10 +261,10 @@ def index_sls():
             attributes = session['samlUserdata'].items()
 
     if 'SAMLResponse' in request.args:
-        current_app.logger.info('Info(/sls)->out: redirect(.index)')
+        #current_app.logger.info('Info(/sls)->out: redirect(.index)')
         return redirect(url_for('.index'))
 
-    current_app.logger.info('Info(/sls)->out: render_template(auth_saml/index.html)')
+    #current_app.logger.info('Info(/sls)->out: render_template(auth_saml/index.html)')
     return render_template(
                 'auth_saml/index.html',
                 errors=errors,
@@ -261,7 +286,7 @@ def attrs():
         if len(session['samlUserdata']) > 0:
             attributes = session['samlUserdata'].items()
 
-    current_app.logger.info('Info(/attrs)->out: render_template(auth_saml/attrs.html)')
+    #current_app.logger.info('Info(/attrs)->out: render_template(auth_saml/attrs.html)')
     return render_template(
                 'auth_saml/attrs.html',
                 paint_logout=paint_logout,
@@ -313,6 +338,7 @@ def auth_check():
         # not authenticated
         out_code = 401
 
+    # first build response
     response = make_response(
                  render_template(
                      'auth_saml/auth_check.html',
@@ -320,16 +346,23 @@ def auth_check():
                      attributes=attributes
                  ), out_code)
 
+    # and now propagate attributes as header vars named 'AS-X-...' and 'AS-X-...-COUNT'
     if attributes:
         #current_app.logger.info('Info(/auth_check): Got '+str(len(attributes))+' attributes: '+pprint.pformat(attributes))
         for key, value in attributes:
             #current_app.logger.info('Info(/auth_check): Got attributes['+key+']: '+pprint.pformat(value))
-            response.headers['X-ATTR-'+key] = value[0]
+            h_name   = 'AS-X-'+key.upper()
+            h_name_c = 'AS-X-'+key.upper()+'-COUNT'
+            h = value[0]
+            c=1
             if len(value) > 1:
-                for i in range(len(value)):
-                    response.headers['X-ATTR-'+key+'-'+str(i)] = value[i]
+                for i in range(1, len(value)):
+                    c = c + 1
+                    h = h + ";" + value[i]
+            response.headers[h_name] = h
+            response.headers[h_name_c] = str(c)
 
-
-    current_app.logger.info('Info(/auth_check)->out: out via '+str(out_code))
+    #current_app.logger.info('Info(/auth_check)->response.headers: '+pprint.pformat(response.headers))
+    #current_app.logger.info('Info(/auth_check)->out: out via '+str(out_code))
     return response
 

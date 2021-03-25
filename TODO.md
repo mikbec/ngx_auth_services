@@ -5,6 +5,12 @@ TODOs
 * Implement decision for `lowercase_urlencoding` in `prepare_flask_request()`
   in file views.py because Defaults to false. But ADFS users should set this to
   true.
+* Remove additional "attrs" pages because it is not needed anymore.
+* Describe usage of SLO URL.
+* Provide SUPERVISORD example config.
+* Provide NGINX example config.
+* Describe variable translation from header variables to `upstream_http_*`
+  variables.
 
 DONE
 ----

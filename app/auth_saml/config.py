@@ -40,6 +40,8 @@ class AuthSAMLConfig:
     AUTH_SAML_SP_PRIVATEKEY_FILE = None
     AUTH_SAML_SP_NEW_X509CERT_FILE = None
 
+    AUTH_SAML_SP_SLO_URL = None
+
     def set_SAML_IDP_METADATA_URL(self, url):
         self.AUTH_SAML_IDP_METADATA_URL = url
 
@@ -316,6 +318,14 @@ def set_sp_metadata_urls():
     # run settings check now if we set some data?
     run_settings_check = False
     sp_url_prefix = current_app.config.get('AUTH_SAML_SP_URL_PREFIX', None)
+
+    # first set URL for logout (slo)
+    if not current_app.config.get('AUTH_SAML_SP_SLO_URL', None):
+        if sp_url_prefix:
+            url = sp_url_prefix + url_for('auth_saml.index_slo')
+        else:
+            url = url_for('auth_saml.index_slo', _external=True)
+        current_app.config['AUTH_SAML_SP_SLO_URL'] = url
 
     # set entityId => "http.../metadata/"
     if not current_app.config['AUTH_SAML_SETTINGS_DICT']['sp'].get('entityId', None):
