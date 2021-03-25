@@ -8,12 +8,15 @@ from onelogin.saml2.utils import OneLogin_Saml2_Utils
 # auth_saml stuff
 from .tools import nocache
 from . import bp as auth_saml_bp
+from .config import set_sp_metadata_urls
 
 # for current_app.logger
 import pprint
 
 def init_saml_auth(req):
     if 'AUTH_SAML_SETTINGS_DICT' in current_app.config:
+        set_sp_metadata_urls()
+        #current_app.logger.info('Info(/): Got AUTH_SAML_SETTINGS_DICT : '+pprint.pformat(current_app.config['AUTH_SAML_SETTINGS_DICT']))
         auth = OneLogin_Saml2_Auth(req, custom_base_path=current_app.config['SAML_PATH'], old_settings=current_app.config['AUTH_SAML_SETTINGS_DICT'])
     else:
         auth = OneLogin_Saml2_Auth(req, custom_base_path=current_app.config['SAML_PATH'])
@@ -77,10 +80,10 @@ def do_index_sso(url_for_arg):
     attributes = False
     paint_logout = False
 
-    hdrs = dict(request.headers)
-    current_app.logger.info('Info(/sso): Got header: '+pprint.pformat(hdrs))
-    current_app.logger.info('Info(/sso): Got req : '+pprint.pformat(req))
-    current_app.logger.info('Info(/sso): Got args: '+pprint.pformat(request.args))
+    #hdrs = dict(request.headers)
+    #current_app.logger.info('Info(/sso): Got header: '+pprint.pformat(hdrs))
+    #current_app.logger.info('Info(/sso): Got req : '+pprint.pformat(req))
+    #current_app.logger.info('Info(/sso): Got args: '+pprint.pformat(request.args))
 
     return_to = url_for(url_for_arg)
     if 'url' in request.args:
@@ -173,7 +176,7 @@ def index_acs():
         session['samlSessionIndex'] = auth.get_session_index()
         self_url = OneLogin_Saml2_Utils.get_self_url(req)
         if 'RelayState' in request.form and self_url != request.form['RelayState']:
-            current_app.logger.info('Info(/acs)->out: Got RelayState: '+pprint.pformat(request.form['RelayState']))
+            #current_app.logger.info('Info(/acs)->out: Got RelayState: '+pprint.pformat(request.form['RelayState']))
             return redirect(auth.redirect_to(request.form['RelayState']))
     elif auth.get_settings().is_debug_active():
         error_reason = auth.get_last_error_reason()
@@ -291,10 +294,10 @@ def auth_check():
     attributes = False
     out_code = 200
 
-    hdrs = dict(request.headers)
-    current_app.logger.info('Info(/auth_check): Got header: '+pprint.pformat(hdrs))
-    current_app.logger.info('Info(/auth_check): Got req : '+pprint.pformat(req))
-    current_app.logger.info('Info(/auth_check): Got args: '+pprint.pformat(request.args))
+    #hdrs = dict(request.headers)
+    #current_app.logger.info('Info(/auth_check): Got header: '+pprint.pformat(hdrs))
+    #current_app.logger.info('Info(/auth_check): Got req : '+pprint.pformat(req))
+    #current_app.logger.info('Info(/auth_check): Got args: '+pprint.pformat(request.args))
 
     #if not auth.is_authenticated():
     #    response = make_response('User authentication needed.', 401)
@@ -320,7 +323,7 @@ def auth_check():
     if attributes:
         #current_app.logger.info('Info(/auth_check): Got '+str(len(attributes))+' attributes: '+pprint.pformat(attributes))
         for key, value in attributes:
-            current_app.logger.info('Info(/auth_check): Got attributes['+key+']: '+pprint.pformat(value))
+            #current_app.logger.info('Info(/auth_check): Got attributes['+key+']: '+pprint.pformat(value))
             response.headers['X-ATTR-'+key] = value[0]
             if len(value) > 1:
                 for i in range(len(value)):
