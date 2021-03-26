@@ -1,6 +1,8 @@
 import os
-#_saml_base_cfg_dir = os.path.abspath(os.path.dirname(__file__))
-_saml_base_cfg_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)), 'saml')
+
+# some internal configuration settings
+_default_secret_key = '!!! The python3-saml toolkit secret key you have to change! !!!'
+_default_secret_key_filename = 'secret-key.txt'
 
 class BaseConfig(object):
     '''
@@ -10,34 +12,47 @@ class BaseConfig(object):
     '''
     CONFIG_NAME = 'BaseConfig'
 
-    SECRET_KEY = '!!! The python3-saml toolkit secret key you have to change! !!!'
-    SAML_PATH  = \
-            os.environ.get('NGX_SAML_AUTH_SAML_PATH') or \
-            _saml_base_cfg_dir
+    INSTANCE_PATH = None
+
+    SECRET_KEY = _default_secret_key
+    SECRET_KEY_FILE = ''
 
     # URL_MASTER_CONTEXT must be empty or must begin and end with "/".
     URL_MASTER_CONTEXT = \
-            os.environ.get('NGX_SAML_AUTH_URL_MASTER_CONTEXT') or \
+            os.environ.get('NGX_AUTH_SVCS_URL_MASTER_CONTEXT') or \
             '/auth_services/'
 
+    def is_default_secret_key(self, test_secret_key=None):
+        if test_secret_key:
+            if test_secret_key == _default_secret_key:
+                return True
+        elif self.SECRET_KEY == _default_secret_key:
+            return True
+        return False
+
     def update_config_obj(self, app_main_path):
+        # set INSTANCE_PATH
+        if ('NGX_AUTH_SVCS_INSTANCE_PATH' in os.environ) and \
+                os.path.isdir(os.environ.get('NGX_AUTH_SVCS_INSTANCE_PATH')):
+            self.INSTANCE_PATH = os.environ.get('NGX_AUTH_SVCS_INSTANCE_PATH')
+
         # set SECRET_KEY
-        if 'NGX_SAML_AUTH_SECRET_KEY' in os.environ:
-            self.SECRET_KEY = os.environ.get('NGX_SAML_AUTH_SECRET_KEY')
-        elif app_main_path and os.path.isfile(os.path.join(app_main_path, 'secret-key.txt')):
-            self.SECRET_KEY = open(os.path.join(app_main_path, 'secret-key.txt')).read()
-        elif os.path.isfile(os.path.join(_saml_base_cfg_dir, 'secret-key.txt')):
-            self.SECRET_KEY = open(os.path.join(_saml_base_cfg_dir, 'secret-key.txt')).read()
+        if 'NGX_AUTH_SVCS_SECRET_KEY' in os.environ:
+            self.SECRET_KEY = os.environ.get('NGX_AUTH_SVCS_SECRET_KEY')
+        elif self.INSTANCE_PATH and \
+                os.path.isfile(os.path.join(self.INSTANCE_PATH, _default_secret_key_filename)):
+            self.SECRET_KEY = open(os.path.join(self.INSTANCE_PATH, _default_secret_key_filename)).read()
+            self.SECRET_KEY_FILE = os.path.join(self.INSTANCE_PATH, _default_secret_key_filename)
+        elif app_main_path and \
+                os.path.isfile(os.path.join(app_main_path, 'instance', _default_secret_key_filename)):
+            self.SECRET_KEY = open(os.path.join(app_main_path, 'instance', _default_secret_key_filename)).read()
+            self.SECRET_KEY_FILE = os.path.join(app_main_path, 'instance', _default_secret_key_filename)
+        elif app_main_path and \
+                os.path.isfile(os.path.join(app_main_path, _default_secret_key_filename)):
+            self.SECRET_KEY = open(os.path.join(app_main_path, _default_secret_key_filename)).read()
+            self.SECRET_KEY_FILE = os.path.join(app_main_path, _default_secret_key_filename)
         else:
             pass
-
-        # set SAML_PATH
-        if 'NGX_SAML_AUTH_SAML_PATH' in os.environ:
-            self.SAML_PATH = os.environ.get('NGX_SAML_AUTH_SAML_PATH')
-        elif app_main_path and os.path.exists(os.path.join(app_main_path, 'instance', 'saml')):
-            self.SAML_PATH = os.path.join(app_main_path, 'instance', 'saml')
-        elif app_main_path and os.path.exists(os.path.join(app_main_path, 'saml')):
-            self.SAML_PATH = os.path.join(app_main_path, 'saml')
 
 class DevelopmentConfig(BaseConfig):
     '''

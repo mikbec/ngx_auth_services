@@ -27,20 +27,25 @@ def create_app(config_name, app_main_file=None):
 
     # now create our app object
     static_url_path = config_obj.URL_MASTER_CONTEXT + 'static'
-    app = Flask(__name__,
+    if config_obj.INSTANCE_PATH:
+        app = Flask(__name__,
+                instance_path = config_obj.INSTANCE_PATH,
                 instance_relative_config = True,
                 static_url_path = static_url_path
                )
+    else:
+        app = Flask(__name__,
+                instance_relative_config = True,
+                static_url_path = static_url_path
+               )
+    if app.instance_path:
+        config_obj.update_config_obj(app.instance_path)
     app.config.from_object(config_obj)
 
     #db.init_app(app)
     #migrate.init_app(app, db)
     babel.init_app(app)
     bootstrap.init_app(app)
-
-    from app.auth_saml import bp as auth_saml_bp
-    url_prefix = app.config['URL_MASTER_CONTEXT'] + 'auth_saml'
-    app.register_blueprint(auth_saml_bp, url_prefix=url_prefix)
 
     #if not app.config['TESTING'] and not app.config['DEBUG']:
     if not app.config['TESTING']:
@@ -56,9 +61,21 @@ def create_app(config_name, app_main_file=None):
                      )
         file_handler.setLevel(logging.INFO)
         app.logger.addHandler(file_handler)
-
         app.logger.setLevel(logging.INFO)
         app.logger.info(_l('Application startup'))
+
+    # load auth_saml stuff
+    url_prefix = app.config['URL_MASTER_CONTEXT'] + 'auth_saml'
+    from app.auth_saml import bp as auth_saml_bp
+    app.register_blueprint(auth_saml_bp, url_prefix=url_prefix)
+    from app.auth_saml import config as auth_saml_config
+    auth_saml_config_obj = auth_saml_config.create_config_obj(app)
+    app.config.from_object(auth_saml_config_obj)
+
+    #if not app.config['TESTING'] and not app.config['DEBUG']:
+    if not app.config['TESTING']:
+        if config_obj.is_default_secret_key(app.config['SECRET_KEY']):
+            app.logger.warning(_l('You are using the default secret key ... please change it!'))
 
     return app
 
