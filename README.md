@@ -1,13 +1,21 @@
-# Flask App configuration
-This is for "default" environment ... please have a look at "app/config.py".
+# NGINX `auth_request` `auth_service` (for SAML)
 
-        cd /app/base/path
-        source venv/bin/activate
-        python main.py
+This project provides a helper service for NGINX which will be called locally
+via `ngx_auth_request` module to authenticate/authorize users.
 
-You can use flask command too to start application like
+At the moment it only works for SAML authentication, but should also be expandable
+for other methods of authentication and/or authorization.
 
-        cd /app/base/path
+Service is written in Python and uses Flask. For SAML authentication it use the
+SAML Python Toolkit `python3-saml` provided by OneLogin. The `auth_saml` module
+provided by this service is based on the example `python3-saml/demo-flask/`
+from OneLogin too.
+
+## Flask App configuration
+
+For _development_ environment you can use the command `flask` to start application like
+
+        cd /app/base/path/ngx_auth_services
         source venv/bin/activate
         export FLASK_APP=main.py
         #export FLASK_DEBUG=1
@@ -18,9 +26,12 @@ Additionally for complete available flask subcommands run
 
         flask --help
 
+For _default_ (aka _production_) environment you should use a server that
+implements the WSGI specification like for example `uWSGI`.
+
 Before you can use the choosen environment you may have to initialize the database
 
-        cd /app/base/path
+        cd /app/base/path/ngx_auth_services
         source venv/bin/activate
         export FLASK_APP=main.py
         export FLASK_ENV=development|production|test
@@ -28,37 +39,63 @@ Before you can use the choosen environment you may have to initialize the databa
         (optional) chown -R www-data:www-data app.*.db
         flask list-routs
 
-# UWSGI configuration
-For uwsgi you may need a file `wsgi.py`
+## uWSGI configuration
+For uWSGI you may need a file `wsgi.py`
 
-Start uwsgi by hand for example like this
+You can start uwsgi by hand for example like this
 
-        cd /app/base/path
+        cd /app/base/path/ngx_auth_services
         source venv/bin/activate
         export FLASK_APP=main.py
         export FLASK_ENV=development|production|test
-        ./venv/bin/uwsgi --socket 127.0.0.1:9080 --wsgi-file wsgi.py \
-                         --callable app --processes 4 --threads 2 \
-                         --uid awx --gid awx
+        ./venv/bin/uwsgi --protocol=http --socket 127.0.0.1:5000 \
+                         --wsgi-file wsgi.py --callable app \
+                         --processes 4 --threads 2 --buffer-size = 65535 \
+                         --uid www-data --gid www-data
 
 You can put uwsgi commandline options in a config file f.e. `uwsgi.ini`
 
-             [uwsgi]
-             socket = 127.0.0.1:9080
-             wsgi-file = wsgi.py
-             callable = app
-             processec = 4
-             threads = 2
-             uid = awx
-             gid = awx
+        [uwsgi]
+        protocol = http
+        socket = 127.0.0.1:5000
+        wsgi-file = wsgi.py
+        callable = app
+        processes = 4
+        threads = 2
+        buffer-size = 65535
+        # not needed if uwsgi runs under supervisord
+        uid = www-data
+        gid = www-data
 
 and start uwsgi with
 
-        cd /app/base/path
+        cd /app/base/path/ngx_auth_services
         source venv/bin/activate
         export FLASK_APP=main.py
         export FLASK_ENV=development|production|test
         ./venv/bin/uwsgi uwsgi.ini
 
-# Nginx configuration
+# SUPERVISORD configuration
+Put a config file `ngx_auth_services.ini` with a content like this
 
+        [program:ngx_auth_services]
+        directory=/app/base/path/ngx_auth_services
+        command=/app/base/path/ngx_auth_services/venv/bin/uwsgi uwsgi.ini
+        stdout_logfile="syslog"
+        stderr_logfile="syslog"
+        startsecs=10
+        user=www-data
+        group=www-data
+        stopsignal=QUIT
+        stopasgroup=true
+        killasgroup=true
+
+into `/etc/supervisord.d/` and let it run with
+
+        supervisorctl reload
+        supervisorctl start ngx_auth_services 
+        supervisorctl stop ngx_auth_services 
+        supervisorctl status
+
+# NGINX configuration
+todo
