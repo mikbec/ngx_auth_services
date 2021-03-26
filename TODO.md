@@ -11,6 +11,8 @@ TODOs
 * Provide NGINX example config.
 * Describe variable translation from header variables to `upstream_http_*`
   variables.
+* Provide complete example config with test web pages.
+* Write consistent documentation.
 
 DONE
 ----
