@@ -13,6 +13,7 @@ TODOs
   variables.
 * Provide complete example config with test web pages.
 * Write consistent documentation.
+* let defered init do in `@app.before_first_request`
 
 DONE
 ----
