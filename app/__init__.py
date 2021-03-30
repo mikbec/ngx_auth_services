@@ -79,3 +79,6 @@ def create_app(config_name, app_main_file=None):
 
     return app
 
+def do_it_before_first_request():
+    from app.auth_saml.config import set_sp_metadata_urls
+    set_sp_metadata_urls()

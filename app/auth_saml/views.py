@@ -8,15 +8,12 @@ from onelogin.saml2.utils import OneLogin_Saml2_Utils
 # auth_saml stuff
 from .tools import nocache
 from . import bp as auth_saml_bp
-from .config import set_sp_metadata_urls
 
 # for current_app.logger
 #import pprint
 
 def init_saml_auth(req):
     if 'AUTH_SAML_SETTINGS_DICT' in current_app.config:
-        set_sp_metadata_urls()
-        #current_app.logger.info('Info(/): Got AUTH_SAML_SETTINGS_DICT : '+pprint.pformat(current_app.config['AUTH_SAML_SETTINGS_DICT']))
         auth = OneLogin_Saml2_Auth(req, custom_base_path=current_app.config['SAML_PATH'], old_settings=current_app.config['AUTH_SAML_SETTINGS_DICT'])
     else:
         auth = OneLogin_Saml2_Auth(req, custom_base_path=current_app.config['SAML_PATH'])
@@ -26,6 +23,8 @@ def init_saml_auth(req):
 def prepare_flask_request(request):
     # If server is behind proxys or balancers use the HTTP_X_FORWARDED fields
     url_data = urlparse(request.url)
+    #Set lowercase_urlencoding=True if using ADFS as IdP, https://github.com/onelogin/python-saml/pull/144
+    lowercase_urlencoding = current_app.config.get('AUTH_SAML_IDP_LC_URLENC', False)
     return {
         #'https': 'on' if request.scheme == 'https' else 'off',
         'https': 'on',
@@ -33,8 +32,7 @@ def prepare_flask_request(request):
         'server_port': url_data.port,
         'script_name': request.path,
         'get_data': request.args.copy(),
-        # Uncomment if using ADFS as IdP, https://github.com/onelogin/python-saml/pull/144
-        # 'lowercase_urlencoding': True,
+        'lowercase_urlencoding': lowercase_urlencoding,
         'post_data': request.form.copy()
     }
 
