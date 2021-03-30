@@ -23,6 +23,8 @@ def init_saml_auth(req):
 def prepare_flask_request(request):
     # If server is behind proxys or balancers use the HTTP_X_FORWARDED fields
     url_data = urlparse(request.url)
+    #Set lowercase_urlencoding=True if using ADFS as IdP, https://github.com/onelogin/python-saml/pull/144
+    lowercase_urlencoding = current_app.config.get('AUTH_SAML_IDP_LC_URLENC', False)
     return {
         #'https': 'on' if request.scheme == 'https' else 'off',
         'https': 'on',
@@ -30,8 +32,7 @@ def prepare_flask_request(request):
         'server_port': url_data.port,
         'script_name': request.path,
         'get_data': request.args.copy(),
-        # Uncomment if using ADFS as IdP, https://github.com/onelogin/python-saml/pull/144
-        # 'lowercase_urlencoding': True,
+        'lowercase_urlencoding': lowercase_urlencoding,
         'post_data': request.form.copy()
     }
 

@@ -26,6 +26,7 @@ class AuthSAMLConfig:
     AUTH_SAML_IDP_METADATA_URL = None
     AUTH_SAML_IDP_VALIDATE_CERT = True
     AUTH_SAML_IDP_ENTITY_ID = None
+    AUTH_SAML_IDP_LC_URLENC = False
 
     # We name it "SAML_PATH" because Onelogin uses this config variable internally.
     SAML_PATH  = \
@@ -237,6 +238,7 @@ class AuthSAMLConfig:
         self.AUTH_SAML_IDP_METADATA_URL = auth_saml_settings.get('AUTH_SAML_IDP_METADATA_URL', None)
         self.AUTH_SAML_IDP_VALIDATE_CERT = set_string_to_boolean(auth_saml_settings.get('AUTH_SAML_IDP_VALIDATE_CERT', "True"))
         self.AUTH_SAML_IDP_ENTITY_ID = set_empty_string_to_none(auth_saml_settings.get('AUTH_SAML_IDP_ENTITY_ID', None))
+        self.AUTH_SAML_IDP_LC_URLENC = set_string_to_boolean(auth_saml_settings.get('AUTH_SAML_IDP_LC_URLENC', "False"))
 
         # Is there an "idp" section?
         idp_data = {}
@@ -293,7 +295,7 @@ def set_empty_string_to_none(str_val=None):
 def set_string_to_boolean(str_val=None):
     if not str_val:
         return False
-    return str(str_val).lower() in ("yes", "true", "t", "1")
+    return str(str_val).lower() in ("yes", "y", "true", "t", "1")
 
 def create_config_obj(app=None):
     '''

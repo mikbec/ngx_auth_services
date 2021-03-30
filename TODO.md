@@ -2,9 +2,6 @@ TODOs
 -----
 
 * Print out settings in log file on application start.
-* Implement decision for `lowercase_urlencoding` in `prepare_flask_request()`
-  in file views.py because Defaults to false. But ADFS users should set this to
-  true.
 * Remove additional "attrs" pages because it is not needed anymore.
 * Describe usage of SLO URL.
 * Provide SUPERVISORD example config.
@@ -19,6 +16,12 @@ DONE
 [2021-03-30 20:08:56 +02:00]
 
 * let defered init do in `@app.before_first_request`
+* Implement decision for `lowercase_urlencoding` in `prepare_flask_request()`
+  in file views.py because Defaults to false. But ADFS users should set this to
+  true.
+
+    * Now you can set it in `instance/auth_saml.cfg` as option
+      `AUTH_SAML_IDP_LC_URLENC` which is of type boolean.
 
 [2021-03-25 12:56:10 +01:00]
 
