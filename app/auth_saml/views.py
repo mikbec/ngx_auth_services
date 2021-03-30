@@ -8,15 +8,12 @@ from onelogin.saml2.utils import OneLogin_Saml2_Utils
 # auth_saml stuff
 from .tools import nocache
 from . import bp as auth_saml_bp
-from .config import set_sp_metadata_urls
 
 # for current_app.logger
 #import pprint
 
 def init_saml_auth(req):
     if 'AUTH_SAML_SETTINGS_DICT' in current_app.config:
-        set_sp_metadata_urls()
-        #current_app.logger.info('Info(/): Got AUTH_SAML_SETTINGS_DICT : '+pprint.pformat(current_app.config['AUTH_SAML_SETTINGS_DICT']))
         auth = OneLogin_Saml2_Auth(req, custom_base_path=current_app.config['SAML_PATH'], old_settings=current_app.config['AUTH_SAML_SETTINGS_DICT'])
     else:
         auth = OneLogin_Saml2_Auth(req, custom_base_path=current_app.config['SAML_PATH'])

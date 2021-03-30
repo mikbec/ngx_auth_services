@@ -388,4 +388,6 @@ def set_sp_metadata_urls():
             current_app.logger.warning(_('Defered validation of SAML settings from config file "{}" failed with exception.'.format(config_filename)))
             current_app.logger.warning(_('Exception was: {}'.format(str(exc))))
             return
+
+    #current_app.logger.info('Info(/): Got AUTH_SAML_SETTINGS_DICT : '+pprint.pformat(current_app.config['AUTH_SAML_SETTINGS_DICT']))
     return 

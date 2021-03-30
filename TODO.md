@@ -13,10 +13,13 @@ TODOs
   variables.
 * Provide complete example config with test web pages.
 * Write consistent documentation.
-* let defered init do in `@app.before_first_request`
 
 DONE
 ----
+[2021-03-30 20:08:56 +02:00]
+
+* let defered init do in `@app.before_first_request`
+
 [2021-03-25 12:56:10 +01:00]
 
 * Use something like INI- or YAML-Format to configure `app.from_cfg_file('config.cfg')`.
