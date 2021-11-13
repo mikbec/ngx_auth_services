@@ -241,8 +241,15 @@ def index_sls():
             if get_data and 'RelayState' in get_data:
                 url1 = get_data['RelayState']
                 url2 = current_app.config.get('AUTH_SAML_SP_SLO_URL', "")
-                if url1.lower() != url2.lower():
-                    url = get_data['RelayState']
+                url1_low = url1.lower()
+                if url2 is not None:
+                    url2_low = url2.lower()
+                else:
+                    url2_low = ""
+                if url1_low != url2_low:
+                    url = url1
+                elif url2_low != "":
+                    url = url2
             # end: try to go around the BUG
         if url is not None:
             #current_app.logger.info('Info(/sls)->out: sls out via redirect url: ' + url)
