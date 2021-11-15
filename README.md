@@ -115,6 +115,7 @@ into `/etc/supervisord.d/` and let it run with
         supervisorctl start ngx_auth_services 
 
 To get some logging information try
+
         #supervisorctl stop ngx_auth_services 
         supervisorctl status
 
