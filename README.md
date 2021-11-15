@@ -34,16 +34,7 @@ Additionally for complete available flask subcommands run
 For _default_ (aka _production_) environment you should use a server that
 implements the WSGI specification like for example `uWSGI`.
 
-Before you can use the choosen environment you may have to initialize the database
-
-        cd /app/base/path/ngx_auth_services
-        source venv/bin/activate
-        export FLASK_APP=main.py
-        export FLASK_ENV=development|production|test
-        flask db upgrade head
-        (optional) chown -R www-data:www-data app.*.db
-
-Currently there is only one CLI command
+Currently there is only one flask sub command as CLI available. It is
 
         flask list-routes
 
